@@ -27,8 +27,8 @@ public struct TodoList: TodoListAPI {
     static let DefaultRedisHost = "localhost"
     static let DefaultRedisPort: UInt16 = 6379
     
-    var address: String = TodoCollectionRedis.DefaultRedisHost
-    var port: UInt16 = TodoCollectionRedis.DefaultRedisPort
+    var address: String = TodoList.DefaultRedisHost
+    var port: UInt16 = TodoList.DefaultRedisPort
     var password: String?
     
     // Collection names
@@ -61,8 +61,8 @@ public struct TodoList: TodoListAPI {
      - parameter port: port number for Redis server
      - parameter password: optional password for Redis server
     */
-    public init(address: String = TodoCollectionRedis.DefaultRedisHost,
-                port: UInt16 = TodoCollectionRedis.DefaultRedisPort, password: String? = nil ) throws {
+    public init(address: String = TodoList.DefaultRedisHost,
+                port: UInt16 = TodoList.DefaultRedisPort, password: String? = nil ) {
 
         self.address = address
         self.port = port
