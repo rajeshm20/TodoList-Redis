@@ -21,7 +21,6 @@ let package = Package(
     dependencies: [
                       .Package(url: "https://github.com/IBM-Swift/todolist-api.git", majorVersion: 0),
                       .Package(url: "https://github.com/IBM-Swift/LoggerAPI", majorVersion: 0, minor: 5),
-                      .Package(url: "https://github.com/IBM-Swift/Swift-cfenv", majorVersion: 0),
                       .Package(url: "https://github.com/czechboy0/Redbird.git", majorVersion: 0, minor: 7)
     ]
 )
