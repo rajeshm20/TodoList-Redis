@@ -95,16 +95,15 @@ public class TodoList: TodoListAPI {
      
      - returns: size of set.
      */
-    public var count: Int {
+    public func count(_ oncompletion: (Int) -> Void) throws {
         
         do {
             let client = try connectRedis()
             let count = try client.command(ZCARD, params: [TODOSET]).toInt()
-            return count
+            oncompletion(count)
         } catch {
             Log.error("Could not connect to Redis: \(error)")
         }
-        return 0
     }
     
     /**
