@@ -19,39 +19,42 @@ import Foundation
 import LoggerAPI
 import TodoListAPI
 
-import Redbird
+import SwiftRedis
+
+
+// Collection names
+let TODOSET = "todoset"
+let TODO = "todo"
+
+// Field names
+let TITLE = "title"
+let COMPLETED = "completed"
+let ORDER = "order"
+
+// Redis operations
+let ZCARD = "ZCARD"
+let HGET = "HGET"
+let HMSET = "HMSET"
+let ZREMRANGEBYSCORE = "ZREMRANGEBYSCORE"
+let ZRANGE = "ZRANGE"
+let INCR = "INCR"
+let ZADD = "ZADD"
+let HSET = "HSET"
+let ZREM = "ZREM"
+let DEL = "DEL"
+let INF = "inf"
+
 
 /// TodoList for Redis
-public class TodoList: TodoListAPI {
+public class TodoListRedis: TodoListAPI {
     
     static let DefaultRedisHost = "localhost"
     static let DefaultRedisPort: UInt16 = 6379
     
-    var host: String = TodoList.DefaultRedisHost
-    var port: UInt16 = TodoList.DefaultRedisPort
+    var host: String = TodoListRedis.DefaultRedisHost
+    var port: UInt16 = TodoListRedis.DefaultRedisPort
     var password: String?
     
-    // Collection names
-    let TODOSET = "todoset"
-    let TODO = "todo"
-    
-    // Field names
-    let TITLE = "title"
-    let COMPLETED = "completed"
-    let ORDER = "order"
-    
-    // Redis operations
-    let ZCARD = "ZCARD"
-    let HGET = "HGET"
-    let HMSET = "HMSET"
-    let ZREMRANGEBYSCORE = "ZREMRANGEBYSCORE"
-    let ZRANGE = "ZRANGE"
-    let INCR = "INCR"
-    let ZADD = "ZADD"
-    let HSET = "HSET"
-    let ZREM = "ZREM"
-    let DEL = "DEL"
-    let INF = "inf"
     
     /**
      Returns a Redis DAO for the TodoCollection. Stores the title, whether it is completed, and
@@ -61,8 +64,8 @@ public class TodoList: TodoListAPI {
      - parameter port: port number for Redis server
      - parameter password: optional password for Redis server
      */
-    public init(host: String = TodoList.DefaultRedisHost,
-                port: UInt16 = TodoList.DefaultRedisPort, password: String? = nil ) {
+    public init(host: String = TodoListRedis.DefaultRedisHost,
+                port: UInt16 = TodoListRedis.DefaultRedisPort, password: String? = nil ) {
         
         self.host = host
         self.port = port
@@ -95,15 +98,14 @@ public class TodoList: TodoListAPI {
      
      - returns: size of set.
      */
-    public func count(_ oncompletion: (Int) -> Void) throws {
+    public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
         
-        do {
-            let client = try connectRedis()
+        
+            let client = Redis()
+            client.connect(host: self.host, port: self.port)
             let count = try client.command(ZCARD, params: [TODOSET]).toInt()
-            oncompletion(count)
-        } catch {
-            Log.error("Could not connect to Redis: \(error)")
-        }
+            oncompletion(count, nil)
+        
     }
     
     /**
@@ -127,7 +129,7 @@ public class TodoList: TodoListAPI {
                 return nil
             }
             
-            return TodoItem(id: id, order: orderNumber, title: title, completed: completed)
+            return TodoItem(documentID: id, order: orderNumber, title: title, completed: completed)
             
         } catch {
             Log.error("Could not connect to Redis: \(error)")
@@ -144,7 +146,7 @@ public class TodoList: TodoListAPI {
      
      - parameter: callback
      */
-    public func clear(_ oncompletion: (Void) -> Void) {
+    func clear(withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
         
         do {
             let client = try connectRedis()
@@ -156,7 +158,7 @@ public class TodoList: TodoListAPI {
         oncompletion()
     }
     
-    public func getAll(_ oncompletion: ([TodoItem]) -> Void ) throws {
+    func get(withUserID: String?, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
         
         var todoItems = [TodoItem]()
         
@@ -180,7 +182,7 @@ public class TodoList: TodoListAPI {
             Log.error("Could not connect to Redis: \(error)")
         }
         
-        oncompletion( todoItems )
+        oncompletion( todoItems, nil )
         
     }
     
