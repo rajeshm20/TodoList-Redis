@@ -4,3 +4,4 @@ TodoList.xcodeproj
 Sources/.DS_Store
 TodoListRedis.xcodeproj
 .DS_Store
+Tests
