@@ -17,6 +17,6 @@ Quick start:
 
   `git clone https://github.com/IBM-Swift/todolist-tests Tests`
 
-5. Compile the library with `swift build` or create an XCode project with `swift build -X`
+5. Compile the library with `swift build` or create an XCode project with `swift package generate-xcodeproj`
 
 6. Run the test cases with `swift test` or directly from XCode
