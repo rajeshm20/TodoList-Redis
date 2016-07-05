@@ -23,13 +23,15 @@ import SwiftRedis
 
 
 // Collection names
-let TODOSET = "todoset"
+// let TODOSET = "todoset"
+
 let TODO = "todo"
 
 // Field names
 let TITLE = "title"
 let COMPLETED = "completed"
 let ORDER = "order"
+let USERID = "userid"
 
 // Redis operations
 let ZCARD = "ZCARD"
@@ -46,14 +48,17 @@ let INF = "inf"
 
 
 /// TodoList for Redis
-public class TodoListRedis: TodoListAPI {
+public class TodoList: TodoListAPI {
     
     static let DefaultRedisHost = "localhost"
-    static let DefaultRedisPort: UInt16 = 6379
+    static let DefaultRedisPort = Int32(6379)
+    var redis: Redis!
     
-    var host: String = TodoListRedis.DefaultRedisHost
-    var port: UInt16 = TodoListRedis.DefaultRedisPort
+    var host: String = TodoList.DefaultRedisHost
+    var port: Int32 = TodoList.DefaultRedisPort
     var password: String?
+    
+    var defaultUsername = "default"
     
     
     /**
@@ -64,12 +69,13 @@ public class TodoListRedis: TodoListAPI {
      - parameter port: port number for Redis server
      - parameter password: optional password for Redis server
      */
-    public init(host: String = TodoListRedis.DefaultRedisHost,
-                port: UInt16 = TodoListRedis.DefaultRedisPort, password: String? = nil ) {
+    public init(host: String = TodoList.DefaultRedisHost,
+                port: Int32 = TodoList.DefaultRedisPort, password: String? = "" ) {
         
         self.host = host
         self.port = port
         self.password = password
+        self.redis = Redis()
     }
     
     public convenience init?(config: DatabaseConfiguration) {
@@ -81,14 +87,46 @@ public class TodoListRedis: TodoListAPI {
         guard let port = config.port else {
             return nil
         }
-        
-        self.init(host: host, port: port, password: config.password)
+        self.init(host: host, port: Int32(port), password: config.password)
     }
     
-    private func connectRedis() throws -> Redbird  {
-        let config = RedbirdConfig(address: host, port: port, password: password)
-        let client = try Redbird(config: config)
-        return client
+    private func connectRedis(callback: (NSError?) -> Void) {
+        if !redis.connected  {
+            Log.info("Connecting to Redis")
+            print("Connecting to Redis")
+            
+            redis.connect(host: host, port: port) {
+                error in
+                
+                guard error == nil else {
+                    Log.error("Failed to connect to Redis server")
+                    print("Failed to connect to Redis server")
+                    print(error)
+                    callback(error)
+                    return
+                }
+                
+                Log.info("Authenicate password for Redis")
+                print("Authenicate password for Redis")
+                self.redis.auth(self.password!) {
+                    error in
+
+                    print(error)
+                    guard error != nil else {
+                        Log.error("Failed to authenicate to Redis server")
+                        print("Failed to authenicate to Redis server")
+                        callback(error)
+                        return
+                    }
+                    callback(nil)
+                }
+            }
+        } else {
+            Log.info("Already connected to Redis server")
+            print("Already connected to Redis server")
+            callback(nil)
+        }
+        
     }
     
     /**
@@ -98,44 +136,29 @@ public class TodoListRedis: TodoListAPI {
      
      - returns: size of set.
      */
+    
     public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
         
+        let userid = withUserID != nil ? withUserID! : defaultUsername
         
-            let client = Redis()
-            client.connect(host: self.host, port: self.port)
-            let count = try client.command(ZCARD, params: [TODOSET]).toInt()
-            oncompletion(count, nil)
-        
-    }
-    
-    /**
-     Returns a todo item matching an ID
-     
-     Uses the HGET operation to get the hash for each of the fields.
-     
-     - parameter id: the ID for the todo item (ex. todo:20)
-     */
-    private func lookup( id: String) -> TodoItem? {
-        
-        do {
-            let client = try connectRedis()
-            let title = try client.command(HGET, params: [id, TITLE]).toString()
-            let completedString = try client.command(HGET, params: [id, COMPLETED]).toString()
-            let order = try client.command(HGET, params: [id, ORDER]).toString()
+        connectRedis(){
+            connectionError in
             
-            let completed = completedString == "true" ? true : false
-            guard let orderNumber = Int(order) else {
-                Log.error("Could not parse order as Integer")
-                return nil
+            guard connectionError == nil else {
+                oncompletion(nil, connectionError)
+                return
             }
-            
-            return TodoItem(documentID: id, order: orderNumber, title: title, completed: completed)
-            
-        } catch {
-            Log.error("Could not connect to Redis: \(error)")
+            self.redis.zcard(userid, callback: {
+                (result: Int?, error: NSError?) in
+                
+                guard error == nil else {
+                    oncompletion(nil, error)
+                    return
+                }
+                
+                oncompletion(result, error)
+            })
         }
-        
-        return nil
     }
     
     /**
@@ -146,132 +169,285 @@ public class TodoListRedis: TodoListAPI {
      
      - parameter: callback
      */
-    func clear(withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
+    public func clear(withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
+        let userid = withUserID != nil ? withUserID! : defaultUsername
         
-        do {
-            let client = try connectRedis()
-            try client.command(ZREMRANGEBYSCORE, params: [TODOSET, "-inf", "(inf"])
-        } catch {
-            Log.error("Could not connect to Redis: \(error)")
-        }
-        
-        oncompletion()
-    }
-    
-    func get(withUserID: String?, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
-        
-        var todoItems = [TodoItem]()
-        
-        do {
-            let client = try connectRedis()
-            let responseArray = try client.command(ZRANGE, params: [TODOSET, "0", "-1"]).toArray()
+        connectRedis(){
+            connectionError in
             
-            for item in responseArray {
+            guard connectionError == nil else {
+                oncompletion(connectionError)
+                return
+            }
+            
+            self.redis.zrange(userid, start: 0, stop: -1)  {
+                (result: [RedisString?]?, error: NSError?) in
                 
-                guard let item = try? item.toString() else {
-                    continue
+                guard error == nil else {
+                    oncompletion(error)
+                    return
                 }
                 
-                if let i = lookup(id: item ) {
-                    todoItems.append(i)
+                for item in result! {
+                    
+                    self.redis.del(String(item), callback: {
+                        (result2:Int?, error2:NSError?) in
+                        
+                        guard error2 == nil else {
+                            oncompletion(error2)
+                            return
+                        }
+                    })
+                }
+            }
+            
+            self.redis.zremrangebyscore(userid, min: "-inf", max: "(inf", callback: {
+                (result:Int?, error: NSError?) in
+                
+                guard error == nil else {
+                    oncompletion(error)
+                    return
+                }
+            })
+            oncompletion(nil)
+        }
+    }
+    
+    
+    public func clearAll(oncompletion: (ErrorProtocol?) -> Void) {
+        connectRedis(){
+            connectionError in
+            
+            print(connectionError)
+            
+            guard connectionError == nil else {
+                oncompletion(connectionError)
+                return
+            }
+            
+            self.redis.flushdb() {
+                (result: Bool, error: NSError?) in
+                
+                guard result == true else {
+                    oncompletion(error)
+                    return
+                }
+            }
+            
+            oncompletion(nil)
+        }
+    }
+    
+    
+    public func get(withUserID: String?, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
+        let userid = withUserID != nil ? withUserID! : defaultUsername
+        
+        connectRedis(){
+            connectionError in
+            
+            guard connectionError == nil else {
+                oncompletion(nil, connectionError)
+                return
+            }
+            
+            var todoItems = [TodoItem]()
+            
+            self.redis.zrange(userid, start: 0, stop: -1, callback: {
+                (result:[RedisString?]?, error: NSError?) in
+                
+                for item in result! {
+                    self.lookup(documentId: item!.asString, oncompletion: {
+                        (todoResult: TodoItem?, error: ErrorProtocol?) in
+                        
+                        todoItems.append(todoResult!)
+                    })
+                
+                }
+            })
+            oncompletion(todoItems, nil)
+        
+        }
+    }
+
+    public func get(withUserID: String?, withDocumentID: String, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
+        let userid = withUserID != nil ? withUserID! : defaultUsername
+        self.lookup(documentId: withDocumentID) {
+            (result: TodoItem?, error: ErrorProtocol?) in
+            
+            // check to see the userid matches the user id in the hashset
+            guard userid == result!.userID! else {
+                oncompletion(nil, error)
+                return
+            }
+            
+            oncompletion(result, error)
+        }
+    }
+    
+    
+    public func add(userID: String?, title: String, order: Int = 0, completed: Bool = false, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ){
+        let userid = userID != nil ? userID! : defaultUsername
+        connectRedis(){
+            connectionError in
+            
+            guard connectionError == nil else {
+                oncompletion(nil, connectionError)
+                return
+            }
+            
+            self.redis.incr("todo:id", callback: {
+                (incrResult: Int?, incrError: NSError?) in
+                
+                guard incrError == nil else {
+                    oncompletion(nil, incrError)
+                    return
                 }
                 
+                self.redis.hmset(String(incrResult),
+                                 fieldValuePairs: (TITLE, title), (ORDER, String(order)), (COMPLETED, String(completed)),
+                                 (USERID, userid)) {
+                                    
+                    (result:Bool, error: NSError?) in
+
+                    guard result == true else {
+                    oncompletion(nil, error)
+                    return
+                }
+                
+                self.redis.zadd(userid, tuples: (order,String(incrResult)), callback: {
+                    (result2:Int?, error2: NSError?) in
+                    
+                    guard result2 == 1 else {
+                        print("did not add an element")
+                        oncompletion(nil, error2)
+                        return
+                    }
+                    let newItem = TodoItem(documentID: String(incrResult), userID: userid, order: order, title: title, completed: completed)
+                    
+                    print("add the todo item")
+                    oncompletion(newItem, error2)
+                })
             }
-            
-        } catch {
-            Log.error("Could not connect to Redis: \(error)")
+                
+        })
+       }
+    }
+    
+    private func lookup(documentId: String?, oncompletion: (TodoItem?, ErrorProtocol?) -> Void) {
+        connectRedis(){
+            connectionError in
+            print("this is lokup function")
+            print(documentId)
+            guard connectionError == nil else {
+                oncompletion(nil, connectionError)
+                return
+            }
+            self.redis.hmget(documentId!, fields: TITLE, ORDER, COMPLETED, USERID,  callback: {
+                (result:[RedisString?]?, error: NSError?) in
+                
+                guard error == nil else {
+                    oncompletion(nil,error)
+                    return
+                }
+                print("lookup function")
+                print(result)
+                print(result![3]?.asString)
+                let userID = result![3]!.asString
+                let title = result![0]!.asString
+                let completed = result![2]!.asString == "true" ? true : false
+                guard let order = result?[1]?.asInteger else {
+                    print("could not parse order as Integer")
+                    Log.error("Could not parse order as Integer")
+                    oncompletion(nil, nil)
+                    return
+                }
+                
+                oncompletion(TodoItem(documentID: documentId!, userID: userID, order: order, title: title, completed: completed), error)
+                
+            })
         }
-        
-        oncompletion( todoItems, nil )
-        
     }
     
-    public func get(_ id: String, oncompletion: (TodoItem?) -> Void ) {
-        
-        let i = lookup(id: id )
-        
-        oncompletion( i )
-    }
-    
-    public func add(title: String, order: Int = 0, completed: Bool = false, oncompletion: (TodoItem) -> Void ) throws {
-        
-        do {
-            let client = try connectRedis()
-            let id = try client.command(INCR, params: ["todo:id"]).toInt()
-            let addHashResponse = try client.command(HMSET, params: ["todo:\(id)", TITLE, title, COMPLETED, String(completed), ORDER, String(order)]).toString()
-            // check if OK
-            if addHashResponse != "OK" {
-                throw TodoCollectionError.creationError(title)
+    public func update(documentID: String, userID: String?, title: String?, order: Int?,
+                       completed: Bool?, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
+        connectRedis(){
+            connectionError in
+            
+            guard connectionError == nil else {
+                oncompletion(nil,connectionError)
+                return
             }
             
-            let addSetResponse = try client.command("ZADD", params: [TODOSET, String(order), "\(TODO):\(id)"]).toInt()
-            
-            if addSetResponse != 1 {
-                Log.error("Did not add an element")
-            }
-            
-            let newItem = TodoItem(id: "todo:\(id)",
-                                   order: order,
-                                   title: title,
-                                   completed: completed        )
-            oncompletion( newItem )
-            
-        } catch {
-            Log.error("Could not connect to Redis: \(error)")
-            
-        }
-        
-    }
-    
-    public func update(id: String, title: String?, order: Int?, completed: Bool?, oncompletion: (TodoItem?) -> Void ) {
-        
-        do {
-            let client = try connectRedis()
             if let title = title {
-                try client.command(HSET, params: [id, TITLE, title])
+                self.redis.hmset(documentID, fieldValuePairs: (TITLE, title), callback: {
+                    (result:Bool, error: NSError?) in
+                    
+                    guard error == nil else {
+                        oncompletion(nil, error)
+                        return
+                    }
+                })
+            }
+            
+            if let order = order {
+                self.redis.hmset(documentID, fieldValuePairs: (ORDER, String(order)), callback: {
+                    (result:Bool, error: NSError?) in
+                    
+                    guard error == nil else {
+                        oncompletion(nil, error)
+                        return
+                    }
+                })
             }
             
             if let completed = completed {
                 let completedString = completed ? "true" : "false"
-                try client.command(HSET, params: [id, COMPLETED, completedString])
+                self.redis.hmset(documentID, fieldValuePairs: (COMPLETED, completedString), callback: {
+                    (result:Bool, error: NSError?) in
+                    
+                    guard error == nil else {
+                        oncompletion(nil, error)
+                        return
+                    }
+                })
             }
             
-            if let order = order {
-                try client.command(HSET, params: [id, ORDER, String(order)])
-            }
-            
-            
-            get(id) {
-                todoitem in
+            self.get(withUserID: userID, withDocumentID: documentID, oncompletion: {
+                (result:TodoItem?, error:ErrorProtocol?) in
                 
-                oncompletion(todoitem)
+                oncompletion(result,  error)
+            })
+        }
+    }
+    
+    public func delete(withUserID: String?, withDocumentID: String, oncompletion: (ErrorProtocol?) -> Void) {
+        connectRedis(){
+            connectionError in
+            
+            guard connectionError == nil else {
+                oncompletion(connectionError)
+                return
             }
             
-            
-            
-        } catch {
-            Log.error("Could not connect to Redis: \(error)")
+            self.redis.zrem(withUserID!, members: withDocumentID, callback: {
+                (result:Int?, error: NSError?) in
+                
+                guard result == 1 else {
+                    oncompletion(error)
+                    return
+                }
+                
+                self.redis.del(withUserID!, callback: {
+                    (result2:Int?, error2:NSError?) in
+                    
+                    guard error2 == nil else {
+                        oncompletion(error2)
+                        return
+                    }
+                    
+                    oncompletion(nil)
+                })
+            })
         }
-        
     }
-    
-    public func delete(_ id: String, oncompletion: (Void) -> Void) {
-        
-        do {
-            let client = try connectRedis()
-            try client.command(ZREM, params: [TODOSET, id])
-            try client.command(DEL, params: [id])
-            
-        } catch {
-            Log.error("Could not connect to Redis: \(error)")
-            
-        }
-        
-        oncompletion()
-        
-    }
-    
-    
-    
-    
 }
