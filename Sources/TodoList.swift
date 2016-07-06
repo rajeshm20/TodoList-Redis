@@ -338,37 +338,27 @@ public class TodoList: TodoListAPI {
                 return
             }
 
+            var fieldValuePairs = [(String, String)]()
+            
             if let title = title {
-                self.redis.hmset(documentID, fieldValuePairs: (TITLE, title)) {
-                    result, error in
-
-                    guard result && error == nil else {
-                        oncompletion(nil, error)
-                        return
-                    }
-                }
+                fieldValuePairs.append((TITLE, title))
             }
 
             if let order = order {
-                self.redis.hmset(documentID, fieldValuePairs: (ORDER, String(order))) {
-                    result, error in
-
-                    guard result && error == nil else {
-                        oncompletion(nil, error)
-                        return
-                    }
-                }
+                fieldValuePairs.append((ORDER, String(order)))
             }
 
             if let completed = completed {
                 let completedString = completed ? "true" : "false"
-                self.redis.hmset(documentID, fieldValuePairs: (COMPLETED, completedString)) {
-                    result, error in
-
-                    guard result && error == nil else {
-                        oncompletion(nil, error)
-                        return
-                    }
+                fieldValuePairs.append((COMPLETED, completedString))
+            }
+            
+            self.redis.hmsetArrayOfKeyValues(documentID, fieldValuePairs: fieldValuePairs) {
+                result, error in
+                
+                guard result && error == nil else {
+                    oncompletion(nil, error)
+                    return
                 }
             }
 
