@@ -82,7 +82,19 @@ public class TodoList: TodoListAPI {
                     callback(error)
                     return
                 }
-                callback(nil)
+                
+                Log.info("Authenicate password for Redis")
+                self.redis.auth(self.password!) {
+                    error in
+                    
+                    guard error != nil else {
+                        Log.error("Failed to authenicate to Redis server")
+                        
+                        callback(error)
+                        return
+                    }
+                    callback(nil)
+                }
 
             }
         } else {

@@ -32,25 +32,23 @@ extension DatabaseConfiguration {
     
     init(withService: Service) {
         if let credentials = withService.credentials{
-            self.host = credentials["host"].stringValue
-            self.username = credentials["username"].stringValue
+            self.host = credentials["public_hostname"].stringValue
             self.password = credentials["password"].stringValue
-            self.port = UInt16(credentials["port"].stringValue)!
+            self.port = UInt16(credentials["username"].stringValue)!
         } else {
             self.host = "127.0.0.1"
-            self.username = nil
             self.password = nil
             self.port = UInt16(5984)
         }
-        self.options = ["test" : "test"]
+        self.options = [String : AnyObject]()
     }
 }
 
-if let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList-Cloudant"){
+if let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList-Redis"){
     
 let databaseConfiguration = DatabaseConfiguration(withService: service)
 } else {
-    Log.info("Could not find Bluemix Cloudant service")
+    Log.info("Could not find Bluemix Redis service")
 }
 
 let todos: TodoList
