@@ -29,7 +29,8 @@ let USERID = "userid"
 
 /// TodoList for Redis
 public class TodoList: TodoListAPI {
-
+    static let NegInf = "-inf"
+    static let Inf = "(inf"
     static let DefaultRedisHost = "localhost"
     static let DefaultRedisPort = Int32(6379)
     static let DefaultRedisPassword = "password123"
@@ -106,6 +107,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
+                Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -113,6 +115,7 @@ public class TodoList: TodoListAPI {
                 result, error in
 
                 guard error == nil else {
+                    Log.error("Failed to return the cardinality")
                     oncompletion(nil, error)
                     return
                 }
@@ -138,6 +141,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
+                Log.error("Unable to connect to Redis server")
                 oncompletion(connectionError)
                 return
             }
@@ -146,10 +150,12 @@ public class TodoList: TodoListAPI {
                 result, error in
 
                 guard error == nil else {
+                    Log.error("Failed to return list of all document ID(s)")
                     oncompletion(error)
                     return
                 }
                 guard let result = result else {
+                    Log.error("Unable to parse")
                     oncompletion(TodoCollectionError.ParseError)
                     return
                 }
@@ -160,6 +166,7 @@ public class TodoList: TodoListAPI {
                         result2, error2 in
 
                         guard error2 == nil else {
+                            Log.error("Failed to delete an item")
                             oncompletion(error2)
                             return
                         }
@@ -168,10 +175,11 @@ public class TodoList: TodoListAPI {
             }
 
             //TODO -inf and (info add it into Redis adapter
-            self.redis.zremrangebyscore(userID, min: "-inf", max: "(inf") {
+            self.redis.zremrangebyscore(userID, min: TodoList.NegInf, max: TodoList.Inf) {
                 result, error in
 
                 guard error == nil else {
+                    Log.error("Failed to remove all elements")
                     oncompletion(error)
                     return
                 }
@@ -188,6 +196,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
+                Log.error("Unable to connect to Redis server")
                 oncompletion(connectionError)
                 return
             }
@@ -196,6 +205,7 @@ public class TodoList: TodoListAPI {
                 result, error in
 
                 guard result else {
+                    Log.error("Failed to delete all the keys")
                     oncompletion(error)
                     return
                 }
@@ -214,6 +224,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
+                Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -224,11 +235,13 @@ public class TodoList: TodoListAPI {
                 result, error in
 
                 guard error == nil else {
+                    Log.error("Failed to return list of all document ID(s)")
                     oncompletion(nil, error)
                     return
                 }
 
                 guard let result = result else {
+                    Log.error("Failed to parse")
                     oncompletion(nil, TodoCollectionError.ParseError)
                     return
                 }
@@ -242,6 +255,7 @@ public class TodoList: TodoListAPI {
                         todoResult, error in
 
                         guard error == nil else {
+                            Log.error("Failed to lookup the Todo Item")
                             oncompletion(nil, error)
                             return
                         }
@@ -263,11 +277,13 @@ public class TodoList: TodoListAPI {
             result, error in
 
             guard error == nil else {
+                Log.error("Failed to lookup the Todo Item")
                 oncompletion(nil, error)
                 return
             }
 
             guard userID == result?.userID else {
+                Log.error("Result is nil")
                 oncompletion(nil, TodoCollectionError.AuthError)
                 return
             }
@@ -286,6 +302,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
+                Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -294,6 +311,7 @@ public class TodoList: TodoListAPI {
                 incrResult, incrError in
 
                 guard incrError == nil else {
+                    Log.error("Failed to increment the key")
                     oncompletion(nil, incrError)
                     return
                 }
@@ -304,6 +322,7 @@ public class TodoList: TodoListAPI {
                                     result, error in
 
                                     guard result && error == nil else {
+                                        Log.error("Failed to create an hashmap set")
                                         oncompletion(nil, error)
                                         return
                                     }
@@ -312,6 +331,7 @@ public class TodoList: TodoListAPI {
                                         result2, error2 in
 
                                         guard result2 == 1 && error2 == nil else {
+                                            Log.error("Failed to add the tuple")
                                             oncompletion(nil, error2)
                                             return
                                         }
@@ -334,6 +354,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
+                Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -357,6 +378,7 @@ public class TodoList: TodoListAPI {
                 result, error in
                 
                 guard result && error == nil else {
+                    Log.error("Failed to create an hashmap set")
                     oncompletion(nil, error)
                     return
                 }
@@ -364,7 +386,7 @@ public class TodoList: TodoListAPI {
 
             self.get(withUserID: userID, withDocumentID: documentID) {
                 result, error in
-
+                
                 oncompletion(result, error)
             }
         }
@@ -378,6 +400,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
+                Log.error("Unable to connect to Redis server")
                 oncompletion(connectionError)
                 return
             }
@@ -386,6 +409,7 @@ public class TodoList: TodoListAPI {
                 result, error in
 
                 guard result == 1 && error == nil else {
+                    Log.error("Failed to remove the specified item")
                     oncompletion(error)
                     return
                 }
@@ -394,6 +418,7 @@ public class TodoList: TodoListAPI {
                     result2, error2 in
 
                     guard error2 == nil else {
+                        Log.error("Failed to delete the specific key")
                         oncompletion(error2)
                         return
                     }
@@ -410,6 +435,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
+                Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -419,6 +445,7 @@ public class TodoList: TodoListAPI {
 
 
                 guard let result = result where error == nil else {
+                    Log.error("Could not parse")
                     oncompletion(nil, error)
                     return
                 }
