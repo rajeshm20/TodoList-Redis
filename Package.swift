@@ -20,7 +20,7 @@ let package = Package(
     name: "TodoList",
     dependencies: [
                       .Package(url: "https://github.com/IBM-Swift/todolist-api.git", majorVersion: 0, minor: 2),
-                      .Package(url: "https://github.com/IBM-Swift/LoggerAPI.git", majorVersion: 0, minor: 9),
+                      .Package(url: "https://github.com/IBM-Swift/HeliumLogger.git", majorVersion: 0, minor: 9),
                       .Package(url: "https://github.com/chiahuang/Kitura-redis", majorVersion: 0, minor: 18),
                       .Package(url: "https://github.com/IBM-Swift/Kitura", majorVersion: 0, minor: 19)
     ]
