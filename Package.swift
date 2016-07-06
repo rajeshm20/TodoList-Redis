@@ -17,7 +17,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "TodoListRedis",
+    name: "TodoList",
     dependencies: [
                       .Package(url: "https://github.com/IBM-Swift/todolist-api.git", majorVersion: 0, minor: 2),
                       .Package(url: "https://github.com/IBM-Swift/LoggerAPI.git", majorVersion: 0, minor: 8),
