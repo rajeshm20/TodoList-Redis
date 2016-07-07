@@ -33,32 +33,41 @@ extension DatabaseConfiguration {
     init(withService: Service) {
         if let credentials = withService.credentials{
             self.host = credentials["public_hostname"].stringValue
+            self.username = ""
             self.password = credentials["password"].stringValue
             self.port = UInt16(credentials["username"].stringValue)!
         } else {
-            self.host = "127.0.0.1"
-            self.password = nil
-            self.port = UInt16(5984)
+            self.host = "http://aws-us-east-1-portal.18.dblayer.com"
+            self.username = ""
+            self.password = "MLPGNOQGOPKSAITX"
+            self.port = UInt16(10083)
         }
         self.options = [String : AnyObject]()
     }
 }
 
-if let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList-Redis"){
-    
-let databaseConfiguration = DatabaseConfiguration(withService: service)
-} else {
-    Log.info("Could not find Bluemix Redis service")
-}
-
+let databaseConfiguration: DatabaseConfiguration
 let todos: TodoList
 
-todos = TodoList()
-
-
-let controller = TodoListController(backend: todos)
-
-Kitura.addHTTPServer(onPort: 8090, with: controller.router)
-Kitura.run()
+do {
+    
+    if let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList-Redis"){
+        Log.verbose("Found TodoList-Redis on CloudFoundry")
+        databaseConfiguration = DatabaseConfiguration(withService: service)
+        Log.verbose("databaseConfiguration: \(databaseConfiguration.host), \(databaseConfiguration.port)")
+        todos = TodoList(config: databaseConfiguration)
+    } else {
+        todos = TodoList()
+    }
+    
+    let controller = TodoListController(backend: todos)
+    let port = try CloudFoundryEnv.getAppEnv().port
+    Log.verbose("Assigned port is \(port)")
+    
+    Kitura.addHTTPServer(onPort: port, with: controller.router)
+    Kitura.run()
+} catch CloudFoundryEnvError.InvalidValue {
+    Log.error("Oops... something went wrong. Server did not start!")
+}
 //Server.run()
 //Log.info("Server started on \(config.url).")

@@ -33,8 +33,8 @@ public class TodoList: TodoListAPI {
     static let Inf = "(inf"
     static let DefaultRedisHost = "localhost"
     static let DefaultRedisPort = Int32(6379)
-    static let DefaultRedisPassword = "password123"
-    let redis: Redis!
+    static let DefaultRedisPassword = ""
+    var redis: Redis!
 
     var host: String = TodoList.DefaultRedisHost
     var port: Int32 = TodoList.DefaultRedisPort
@@ -59,15 +59,14 @@ public class TodoList: TodoListAPI {
         self.redis = Redis()
     }
 
-    public convenience init?(config: DatabaseConfiguration) {
+    public init(config: DatabaseConfiguration) {
 
-        guard let host = config.host,
-            port = config.port,
-            password = config.password else {
-                return nil
-        }
-
-        self.init(host: host, port: Int32(port), password: password)
+        self.host = config.host!
+        self.port = Int32(config.port!)
+        self.password = config.password!
+        
+        // self.init(host: self.host, port: Int32(self.port), password: self.password)
+        self.redis = Redis()
     }
 
     private func connectRedis(callback: (NSError?) -> Void) {
@@ -84,7 +83,7 @@ public class TodoList: TodoListAPI {
                 }
                 
                 Log.info("Authenicate password for Redis")
-                self.redis.auth(self.password!) {
+                self.redis.auth(self.password) {
                     error in
                     
                     guard error != nil else {
