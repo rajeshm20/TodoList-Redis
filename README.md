@@ -1,5 +1,7 @@
 # TodoList Redis
 
+[![Build Status](https://travis-ci.org/IBM-Swift/todolist-redis.svg?branch=master)](https://travis-ci.org/IBM-Swift/todolist-redis)
+
 Implements the [TodoListAPI](https://github.com/IBM-Swift/todolist-api) for TodoList. Uses the [Kitura-Redis](https://github.com/IBM-Swift/todolist-api) library for interfacing with Redis.
 
 Quick start:
