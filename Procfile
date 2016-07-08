@@ -1,1 +1,1 @@
-web: todolist-redis
+web: TodoList

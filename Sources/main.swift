@@ -37,7 +37,7 @@ extension DatabaseConfiguration {
             self.password = credentials["password"].stringValue
             self.port = UInt16(credentials["username"].stringValue)!
         } else {
-            self.host = "http://aws-us-east-1-portal.18.dblayer.com"
+            self.host = "http://aws-us-east-1-portal.18.dblayer.com/"
             self.username = ""
             self.password = "MLPGNOQGOPKSAITX"
             self.port = UInt16(10083)
@@ -50,7 +50,8 @@ let databaseConfiguration: DatabaseConfiguration
 let todos: TodoList
 
 do {
-    
+    print("TRYING TO RUN CLOUNDFOUNDRYENV!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    Log.verbose("TRYING TO RUN CLOUNDFOUNDRYENV!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     if let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList-Redis"){
         Log.verbose("Found TodoList-Redis on CloudFoundry")
         databaseConfiguration = DatabaseConfiguration(withService: service)
