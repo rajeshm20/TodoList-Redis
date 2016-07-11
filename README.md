@@ -26,7 +26,7 @@ Quick start:
 
 2.Select the Redis by Compose Service
 
-3.Set the Service name as TodoList-Redis then initialize the Host, Port, Username, and Password to the values instantiated in the above section
+3.Set the Service name as TodoList-Redis then initialize the Host, Port, Username, and Password to the values instantiated
 
 4.Upon creation, you should see your unbound service on the dashboard page
 
