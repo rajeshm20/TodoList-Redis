@@ -20,7 +20,7 @@ Quick start:
 6. 
 6. Run the test cases with `swift test` or directly from XCode
 
-Deploying to Bluemix:
+##Deploying to Bluemix:
 
 1.Get an account for Bluemix
 
@@ -44,7 +44,7 @@ Be sure to change the directory to the todolist-mongodb directory where the mani
 
 6.Run ```cf push```
 
-7.It should take several minutes, roughly 4-6minutes. If it works correctly, it should state
+7.It should take several minutes, roughly 4-6 minutes. If it works correctly, it should state
 
 ```
 2 of 2 instances running
