@@ -69,7 +69,7 @@ public class TodoList: TodoListAPI {
         self.redis = Redis()
     }
 
-    private func connectRedis(callback: (NSError?) -> Void) {
+    private func connectRedis(_ callback: (NSError?) -> Void) {
 
         if !redis.connected {
 
@@ -97,7 +97,7 @@ public class TodoList: TodoListAPI {
 
             }
         } else {
-            Log.info("Already connected to Redis server")
+            LoggerAPI.Log.info("Already connected to Redis server")
             callback(nil)
         }
     }
@@ -110,7 +110,7 @@ public class TodoList: TodoListAPI {
      - returns: size of set.
      */
 
-    public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
+    public func count(_ withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
 
         let userID = withUserID ?? defaultUsername
 
@@ -118,7 +118,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
-                Log.error("Unable to connect to Redis server")
+                LoggerAPI.Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -144,7 +144,7 @@ public class TodoList: TodoListAPI {
 
      - parameter: callback
      */
-    public func clear(withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
+    public func clear(_ withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
 
         let userID = withUserID ?? defaultUsername
 
@@ -152,7 +152,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
-                Log.error("Unable to connect to Redis server")
+                LoggerAPI.Log.error("Unable to connect to Redis server")
                 oncompletion(connectionError)
                 return
             }
@@ -201,13 +201,13 @@ public class TodoList: TodoListAPI {
     }
 
 
-    public func clearAll(oncompletion: (ErrorProtocol?) -> Void) {
+    public func clearAll(_ oncompletion: (ErrorProtocol?) -> Void) {
 
         connectRedis() {
             connectionError in
 
             guard connectionError == nil else {
-                Log.error("Unable to connect to Redis server")
+                LoggerAPI.Log.error("Unable to connect to Redis server")
                 oncompletion(connectionError)
                 return
             }
@@ -227,7 +227,7 @@ public class TodoList: TodoListAPI {
     }
 
 
-    public func get(withUserID: String?, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
+    public func get(_ withUserID: String?, oncompletion: ([TodoItem]?, ErrorProtocol?) -> Void) {
 
         let userID = withUserID ?? defaultUsername
 
@@ -235,7 +235,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
-                Log.error("Unable to connect to Redis server")
+                LoggerAPI.Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -280,7 +280,7 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func get(withUserID: String?, withDocumentID: String,
+    public func get(_ withUserID: String?, withDocumentID: String,
                     oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
 
         let userID = withUserID ?? defaultUsername
@@ -304,7 +304,7 @@ public class TodoList: TodoListAPI {
     }
 
 
-    public func add(userID: String?, title: String, order: Int = 0,
+    public func add(_ userID: String?, title: String, order: Int = 0,
                     completed: Bool = false,
                     oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
 
@@ -313,7 +313,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
-                Log.error("Unable to connect to Redis server")
+                LoggerAPI.Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -358,14 +358,14 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func update(documentID: String, userID: String?, title: String?, order: Int?,
+    public func update(_ documentID: String, userID: String?, title: String?, order: Int?,
                        completed: Bool?, oncompletion: (TodoItem?, ErrorProtocol?) -> Void ) {
 
         connectRedis() {
             connectionError in
 
             guard connectionError == nil else {
-                Log.error("Unable to connect to Redis server")
+                LoggerAPI.Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }
@@ -403,7 +403,7 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    public func delete(withUserID: String?, withDocumentID: String, oncompletion: (ErrorProtocol?) -> Void) {
+    public func delete(_ withUserID: String?, withDocumentID: String, oncompletion: (ErrorProtocol?) -> Void) {
 
         let userID = withUserID ?? defaultUsername
 
@@ -411,7 +411,7 @@ public class TodoList: TodoListAPI {
             connectionError in
 
             guard connectionError == nil else {
-                Log.error("Unable to connect to Redis server")
+                LoggerAPI.Log.error("Unable to connect to Redis server")
                 oncompletion(connectionError)
                 return
             }
@@ -440,13 +440,13 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    private func lookup(documentId: String, oncompletion: (TodoItem?, ErrorProtocol?) -> Void) {
+    private func lookup(_ documentId: String, oncompletion: (TodoItem?, ErrorProtocol?) -> Void) {
 
         connectRedis() {
             connectionError in
 
             guard connectionError == nil else {
-                Log.error("Unable to connect to Redis server")
+                LoggerAPI.Log.error("Unable to connect to Redis server")
                 oncompletion(nil, connectionError)
                 return
             }

@@ -24,7 +24,7 @@ import CloudFoundryEnv
 import TodoListAPI
 
 
-Log.logger = HeliumLogger()
+LoggerAPI.Log.logger = HeliumLogger()
 
 
 
@@ -51,9 +51,9 @@ let todos: TodoList
 
 do {
     if let service = try CloudFoundryEnv.getAppEnv().getService(spec: "TodoList-Redis"){
-        Log.verbose("Found TodoList-Redis on CloudFoundry")
+        LoggerAPI.Log.verbose("Found TodoList-Redis on CloudFoundry")
         databaseConfiguration = DatabaseConfiguration(withService: service)
-        Log.verbose("databaseConfiguration: \(databaseConfiguration.host), \(databaseConfiguration.port)")
+        LoggerAPI.Log.verbose("databaseConfiguration: \(databaseConfiguration.host), \(databaseConfiguration.port)")
         todos = TodoList(config: databaseConfiguration)
     } else {
         todos = TodoList()
@@ -61,12 +61,12 @@ do {
     
     let controller = TodoListController(backend: todos)
     let port = try CloudFoundryEnv.getAppEnv().port
-    Log.verbose("Assigned port is \(port)")
+    LoggerAPI.Log.verbose("Assigned port is \(port)")
     
     Kitura.addHTTPServer(onPort: port, with: controller.router)
     Kitura.run()
 } catch CloudFoundryEnvError.InvalidValue {
-    Log.error("Oops... something went wrong. Server did not start!")
+    LoggerAPI.Log.error("Oops... something went wrong. Server did not start!")
 }
 //Server.run()
 //Log.info("Server started on \(config.url).")
