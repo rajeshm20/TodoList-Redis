@@ -39,7 +39,7 @@ bluemix login -u username -o org_name -s space_name
 ```
 
 ```
-Be sure to change the directory to the todolist-mongodb directory where the manifest.yml file is located.
+Be sure to change the directory to the todolist-redis directory where the manifest.yml file is located.
 ```
 
 6.Run ```cf push```
