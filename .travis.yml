@@ -8,6 +8,8 @@ matrix:
       osx_image: xcode8
 
 before_install:
+  - brew uninstall git
+  - brew install git
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update   ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install redis  ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then wget https://swift.org/builds/development/xcode/swift-DEVELOPMENT-SNAPSHOT-2016-06-20-a/swift-DEVELOPMENT-SNAPSHOT-2016-06-20-a-osx.pkg    ; fi
