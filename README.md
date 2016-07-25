@@ -1,8 +1,6 @@
 # TodoList Redis
 
-[![Build Status](https://travis-ci.org/IBM-Swift/TodoList-Redis.svg?branch=master)](https://travis-ci.org/IBM-Swift/TodoList-Redis)
-
-[![Swift 3 6-06](https://img.shields.io/badge/Swift%203-6/20 SNAPSHOT-blue.svg)](https://swift.org/download/#snapshots)
+[![Build Status](https://travis-ci.org/IBM-Swift/TodoList-Redis.svg?branch=master)](https://travis-ci.org/IBM-Swift/TodoList-Redis)  [![Swift 3 6-06](https://img.shields.io/badge/Swift%203-6/20 SNAPSHOT-blue.svg)](https://swift.org/download/#snapshots)
 
 Implements the [TodoListAPI](https://github.com/IBM-Swift/todolist-api) for TodoList. Uses the [Kitura-Redis](https://github.com/IBM-Swift/todolist-api) library for interfacing with Redis.
 
