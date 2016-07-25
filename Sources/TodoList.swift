@@ -64,8 +64,6 @@ public class TodoList: TodoListAPI {
         self.host = config.host!
         self.port = Int32(config.port!)
         self.password = config.password!
-        
-        // self.init(host: self.host, port: Int32(self.port), password: self.password)
         self.redis = Redis()
     }
 
@@ -102,14 +100,6 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    /**
-     Returns the total number in the collection.
-
-     Uses the ZCARD operation to return the cardinality of the sorted set TODOSET
-
-     - returns: size of set.
-     */
-
     public func count(withUserID: String?, oncompletion: (Int?, ErrorProtocol?) -> Void) {
 
         let userID = withUserID ?? defaultUsername
@@ -136,14 +126,6 @@ public class TodoList: TodoListAPI {
         }
     }
 
-    /**
-     Clears the entire todo collection
-
-     Uses the ZREMRANGEBYSCORE operation to clear the sorted set. Uses the DEL operation on
-     each of the keys.
-
-     - parameter: callback
-     */
     public func clear(withUserID: String?, oncompletion: (ErrorProtocol?) -> Void) {
 
         let userID = withUserID ?? defaultUsername
@@ -185,7 +167,6 @@ public class TodoList: TodoListAPI {
                 }
             }
 
-            //TODO -inf and (info add it into Redis adapter
             self.redis.zremrangebyscore(userID, min: TodoList.NegInf, max: TodoList.Inf) {
                 result, error in
 
