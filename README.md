@@ -1,6 +1,6 @@
 # TodoList Redis
 
-[![Build Status](https://travis-ci.org/IBM-Swift/todolist-redis.svg?branch=master)](https://travis-ci.org/IBM-Swift/todolist-redis)
+[![Build Status](https://travis-ci.org/IBM-Swift/TodoList-Redis.svg?branch=master)](https://travis-ci.org/IBM-Swift/TodoList-Redis)
 
 [![Swift 3 6-06](https://img.shields.io/badge/Swift%203-6/20 SNAPSHOT-blue.svg)](https://swift.org/download/#snapshots)
 
