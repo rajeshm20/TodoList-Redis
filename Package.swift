@@ -21,6 +21,7 @@ let package = Package(
     dependencies: [
         .Package(url: "https://github.com/IBM-Swift/Kitura-redis", majorVersion: 0, minor: 22),
         .Package(url: "https://github.com/IBM-Swift/HeliumLogger.git", majorVersion: 0, minor: 12),
-        .Package(url: "https://github.com/IBM-Swift/todolist-web.git", majorVersion: 0, minor: 3)
+        .Package(url: "https://github.com/IBM-Swift/todolist-web.git", majorVersion: 0, minor: 3),
+        .Package(url: "https://github.com/mxcl/PromiseKit/tree/swift-3.0", majorVersion: 1, minor: 7)
     ]
 )
